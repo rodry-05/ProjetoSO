@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
             int fd_req = open("fifo_requests", O_WRONLY);
             write(fd_req, &done, sizeof(Message));
             close(fd_req);
-
+            
         }
 
 

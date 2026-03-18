@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 
 typedef struct {
     pid_t pid; // command_id
