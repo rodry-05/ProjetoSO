@@ -1,24 +1,27 @@
 CC = gcc
-CFLAGS = -Wall -g -Iinclude
+CFLAGS = -Wall -g -I.
 LDFLAGS = 
 
-all: folders controller runner
+# Lista de executáveis final
+all: folders bin/controller bin/runner
 
-controller: bin/controller
-
-runner: bin/runner	
-
+# Criação das pastas necessárias
 folders:
-		@mkdir -p src include obj bin tmp
+	@mkdir -p obj bin tmp
 
+# Linkagem do Controller
 bin/controller: obj/controller.o
-		$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@
 
+# Linkagem do Runner
 bin/runner: obj/runner.o
-		$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@
 
-obj/%.o: src/%.c
-		$(CC) $(CFLAGS) -c $< -o $@
+# Regra genérica para compilar objetos (.o) a partir dos fontes (.c) na raiz
+obj/%.o: %.c utils.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
+# Limpeza de ficheiros temporários
 clean:
-		rm -f obj/* tmp/* bin/*
+	rm -rf obj/* tmp/* bin/*
+	rm -f fifo_*

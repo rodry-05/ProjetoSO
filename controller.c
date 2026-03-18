@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
 
 
     int running_commands = 0;
-    int scheduled_commands = 0;
+    int scheduled_cmd_length = 0;
 
     Message running_cmd[5]; // array to store currently running commands
     Message scheduled_cmd[256]; // array to store scheduled commands
@@ -60,9 +60,9 @@ int main(int argc, char *argv[]) {
                 close(fd_pipe[0]); 
 
                 if (request.type == 1) { // execute command
-                    scheduled_cmd[scheduled_commands++] = request; // add command to scheduling queue
+                    scheduled_cmd[scheduled_cmd_length++] = request; // add command to scheduling queue
                     /*if (running_commands < parallel) {
-                        scheduled_commands--;
+                        scheduled_cmd_length--;
                         running_commands++;
 
                         char fifo_responses[1024];
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
                     
                     } else {
                         // add command to scheduling queue
-                        scheduled_commands++;
+                        scheduled_cmd_length++;
                     }*/
                 } else if (request.type == 2) { // check status
 
@@ -94,12 +94,12 @@ int main(int argc, char *argv[]) {
                     }
                 }
 
-                while (running_commands < parallel && scheduled_commands > 0) {
+                while (running_commands < parallel && scheduled_cmd_length > 0) {
                     Message next_command = scheduled_cmd[0]; // get next command from scheduling queue
-                    for (int i = 0; i < scheduled_commands - 1; i++) {
+                    for (int i = 0; i < scheduled_cmd_length - 1; i++) {
                         scheduled_cmd[i] = scheduled_cmd[i + 1]; // shift remaining commands in scheduling queue
                     }
-                    scheduled_commands--;
+                    scheduled_cmd_length--;
                     running_cmd[running_commands++] = next_command; // add command to running array
 
                     char fifo_responses[1024];
@@ -112,14 +112,14 @@ int main(int argc, char *argv[]) {
                 }
 
                 write(fd_pipe[1], &running_commands, sizeof(int));
-                write(fd_pipe[1], &scheduled_commands, sizeof(int));
+                write(fd_pipe[1], &scheduled_cmd_length, sizeof(int));
                 _exit(0);
             } else if (pid > 0) { // parent process
                 close(fd_pipe[1]);
                 read(fd_pipe[0], &running_commands, sizeof(int));
-                read(fd_pipe[0], &scheduled_commands, sizeof(int));
+                read(fd_pipe[0], &scheduled_cmd_length, sizeof(int));
                 close(fd_pipe[0]);
-                printf("[controller] running_commands=%d scheduled_commands=%d\n", running_commands, scheduled_commands); // debug
+                printf("[controller] running_commands=%d scheduled_cmd_length=%d\n", running_commands, scheduled_cmd_length); // debug
             }   
         }
     }
