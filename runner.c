@@ -82,10 +82,10 @@ int main(int argc, char *argv[]) {
 
 
 
-    } else if (strcmp(argv[1], "-c") == 0) { // ./runner -c
+    } else if (strcmp(argv[1], "-c") == 0) { // ./runner -c 
  
         
-    } else if (strcmp(argv[1], "-s") == 0) { // ./runner -s
+    } else if (strcmp(argv[1], "-s") == 0) { // ./runner -s 
 
 
     } else {

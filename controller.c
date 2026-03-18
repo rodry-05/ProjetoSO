@@ -122,7 +122,5 @@ int main(int argc, char *argv[]) {
                 printf("[controller] running_commands=%d scheduled_commands=%d\n", running_commands, scheduled_commands); // debug
             }   
         }
-    }
-    
-
+    }    
 }
