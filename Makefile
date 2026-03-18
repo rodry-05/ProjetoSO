@@ -24,4 +24,5 @@ obj/%.o: %.c utils.h
 # Limpeza de ficheiros temporários
 clean:
 	rm -rf obj/* tmp/* bin/*
+	rm -rf obj tmp bin
 	rm -f fifo_*
