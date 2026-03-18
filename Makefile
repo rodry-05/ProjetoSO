@@ -3,7 +3,11 @@ CFLAGS = -Wall -g -I.
 LDFLAGS = 
 
 # Lista de executáveis final
-all: folders bin/controller bin/runner
+all: folders mycontroller myrunner
+
+mycontroller: bin/controller
+
+myrunner: bin/runner
 
 # Criação das pastas necessárias
 folders:
@@ -18,7 +22,7 @@ bin/runner: obj/runner.o
 	$(CC) $(LDFLAGS) $^ -o $@
 
 # Regra genérica para compilar objetos (.o) a partir dos fontes (.c) na raiz
-obj/%.o: %.c utils.h
+obj/%.o: %.c 
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Limpeza de ficheiros temporários

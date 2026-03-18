@@ -17,13 +17,7 @@ int main(int argc, char *argv[]) {
         char **n_argv = argv + 3; // new char *argv[] with command + arguments only 
         int n_argc = argc - 3; // new argc with number of command + arguments
 
-        /*
-        // DELETE 
-        for (int i = 0; i < n_argc; i++) {
-            printf("[DEBUG] Argument %d: %s\n", i, n_argv[i]);
-        }
-        */
-
+        
         // Preparing the request message to send to the controller
         Message permission_request;
         permission_request.type = 1; // type 1 for execute command
