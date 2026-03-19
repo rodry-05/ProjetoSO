@@ -25,8 +25,8 @@ bin/runner: obj/runner.o
 obj/%.o: %.c 
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Limpeza de ficheiros temporários
-clean:
+# usado para limpar os fifos criados durante a execução do programa
+clean:             
 	rm -rf obj/* tmp/* bin/*
 	rm -rf obj tmp bin
 	rm -f fifo_*
