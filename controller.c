@@ -18,6 +18,9 @@ int main(int argc, char *argv[]) {
     Message running_commands[256]; // array to store currently running commands
     Message scheduled_commands[256]; // array to store scheduled commands
 
+    int shutdown_requested = 0;
+    pid_t shutdown_pid = -1;
+
 
     // create FIFO 
     if (access("fifo_runner_to_controller", F_OK) != 0) {
@@ -34,14 +37,48 @@ int main(int argc, char *argv[]) {
     Message request;
     while (1) {        
         if (read(fd_requests, &request, sizeof(Message)) > 0) {
-            // DELETE
 
             if (request.type == 1) { // execute command
-                gettimeofday(&start_time, NULL);
-                scheduled_commands[number_of_scheduled_commands++] = request; // add the command to the scheduled commands list
-
+                if (shutdown_requested) {
+                    continue; 
+                } else {
+                    gettimeofday(&start_time, NULL);
+                    scheduled_commands[number_of_scheduled_commands++] = request; // add the command to the scheduled commands list
+                }
             } else if (request.type == 2) { // check status
+                char fifo_controller_to_runner[256];
+                sprintf(fifo_controller_to_runner, "fifo_controller_to_runner_%d", request.pid);
+                
+                int fd = open(fifo_controller_to_runner, O_WRONLY);
+                if (fd < 0) {
+                    printf("ERROR: failed to open %s\n", fifo_controller_to_runner);
+                    continue;
+                }
+
+                char buffer[4096];
+                int offset = 0;
+                offset += sprintf(buffer + offset, "---\nExecuting\n");
+
+                for (int i = 0; i < number_of_running_commands; i++) {
+                    offset += sprintf(buffer + offset, "user-id %d - command-id %d\n", running_commands[i].user_id, running_commands[i].pid);
+                }
+
+                offset += sprintf(buffer + offset, "---\nScheduled\n");
+
+                for (int i = 0; i < number_of_scheduled_commands; i++) {
+                    offset += sprintf(buffer + offset, "user-id %d - command-id %d\n", scheduled_commands[i].user_id, scheduled_commands[i].pid);
+                }
+
+                // Send the status response to the runner
+                write(fd, buffer, offset);
+                close(fd);
+
             } else if (request.type == 3) { // shoutdown
+                if (!shutdown_requested) {
+                    shutdown_requested = 1;
+                    shutdown_pid = request.pid;
+                }
+
             } else if (request.type == 4) { // command finished
                 gettimeofday(&end_time, NULL);
                 for (int i = 0; i < number_of_running_commands; i++) {
@@ -102,7 +139,23 @@ int main(int argc, char *argv[]) {
                 }
             }
         }
-    }
-    
 
+        if (shutdown_requested == 1 && number_of_running_commands == 0 && number_of_scheduled_commands == 0) {
+            char fifo_controller_to_runner[256];
+            sprintf(fifo_controller_to_runner, "fifo_controller_to_runner_%d", shutdown_pid);
+            
+            int fd_shutdown_confirmation = open(fifo_controller_to_runner, O_WRONLY);
+            if (fd_shutdown_confirmation < 0) {
+                printf("ERROR: failed to open %s\n", fifo_controller_to_runner);
+                return -1;
+            }
+
+            write(fd_shutdown_confirmation, &shutdown_pid, sizeof(pid_t)); // send the shutdown confirmation
+            close(fd_shutdown_confirmation);
+            break;
+        }
+    }
+
+    unlink("fifo_runner_to_controller"); // remove the FIFO
+    return 0;
 }
