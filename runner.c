@@ -99,13 +99,87 @@ int main(int argc, char *argv[]) {
         }
 
 
+    } else if (strcmp(argv[1], "-c") == 0) { // ./runner -c
+        if (argc != 2) {
+            printf("ERROR: invalid arguments for ./runner -c\n");
+            return -1;
+        }
 
-
-    } else if (strcmp(argv[1], "-c") == 0) { // ./runner -c 
- 
+        Message status_request;
+        status_request.type = 2; // type 2 for status request
+        status_request.pid = getpid(); // use runner's PID to identify the request
         
-    } else if (strcmp(argv[1], "-s") == 0) { // ./runner -s 
+        char fifo_controller_to_runner[256];
+        sprintf(fifo_controller_to_runner, "fifo_controller_to_runner_%d", status_request.pid); // create a unique FIFO name for this runner
+        mkfifo(fifo_controller_to_runner, 0666); // create a unique FIFO for this runner
+        
 
+        // Send the status request to the controller
+        int fd_status_request = open("fifo_runner_to_controller", O_WRONLY);
+        if (fd_status_request < 0) {
+            printf("ERROR: failed to open fifo_runner_to_controller\n");
+            return -1;
+        }
+        write(fd_status_request, &status_request, sizeof(Message)); // send the status request
+        close(fd_status_request); // close the FIFO
+
+        int fd_status_response = open(fifo_controller_to_runner, O_RDONLY);
+        if (fd_status_response < 0) {
+            printf("ERROR: failed to open %s\n", fifo_controller_to_runner);
+            return -1;
+        }
+
+        // Read the status response from the controller and print it
+        char buffer[1024];
+        int bytes_read;
+        while((bytes_read = read(fd_status_response, buffer, sizeof(buffer) - 1)) >  0) {
+            buffer[bytes_read] = '\0'; // null-terminate the string
+            printf("%s", buffer); // print the status response
+        }
+        close(fd_status_response); // close the FIFO
+        unlink(fifo_controller_to_runner); // remove the FIFO after use
+
+
+
+    } else if (strcmp(argv[1], "-s") == 0) { // ./runner -s
+
+        Message shutdown_request;
+        shutdown_request.type = 3; // type 3 for shutdown request
+        shutdown_request.pid = getpid(); // use runner's PID to identify the request
+
+        // 
+        char fifo_controller_to_runner[256];
+        sprintf(fifo_controller_to_runner, "fifo_controller_to_runner_%d", shutdown_request.pid); // create a unique FIFO name for this runner
+        mkfifo(fifo_controller_to_runner, 0666); // create a unique FIFO for this runner    
+
+        // Send the shutdown request to the controller
+        int fd_shutdown_request = open("fifo_runner_to_controller", O_WRONLY);
+        if (fd_shutdown_request < 0) {
+            printf("ERROR: failed to open fifo_runner_to_controller\n");
+            return -1;
+        }
+        write(fd_shutdown_request, &shutdown_request, sizeof(Message)); // send the shutdown request
+        close(fd_shutdown_request); // close the FIFO
+
+        printf("[runner] sent shutdown notification\n");
+        // Wait the shutdown confirmation from the controller
+
+
+        printf("[runner] waiting for controller to shutdown...\n");
+        // Wait the shutdown confirmation from the controller
+        int fd_confirmation = open(fifo_controller_to_runner, O_RDONLY);
+        if (fd_confirmation < 0) {
+            printf("ERROR: failed to open %s\n", fifo_controller_to_runner);
+            return -1;
+        }
+        
+        pid_t confirmation;
+        read(fd_confirmation, &confirmation, sizeof(pid_t));
+        close(fd_confirmation);
+        unlink(fifo_controller_to_runner); // remove the FIFO after use
+        // Shutdown confirmed
+
+        printf("[runner] controller exited.\n");
 
     } else {
         printf("ERROR: invalid arguments!\n");
@@ -115,11 +189,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
-
-
-
-
-/*
-Perguntar ao stor se o FIFO de confirmaçao deve ser criado pelo runner ou pelo controller. 
-*/
