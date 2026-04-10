@@ -44,7 +44,9 @@ int main(int argc, char *argv[]) {
         write(fd_permission_request, &permission_request, sizeof(Message)); // send the permission request
         close(fd_permission_request); // close the FIFO
 
-        printf("[runner] command %d submited\n", permission_request.pid);
+        char buffer_aux[1024];
+        sprintf(buffer_aux, "[runner] command %d submited\n", permission_request.pid);
+        write(1, buffer_aux, strlen(buffer_aux)); // print the submission message to stdout
         // Wait for the controller's permission
 
         
@@ -64,7 +66,8 @@ int main(int argc, char *argv[]) {
         
         
         // Execute the command
-        printf("[runner] executing command %d...\n", command);
+        sprintf(buffer_aux, "[runner] executing command %d...\n", command);
+        write(1, buffer_aux, strlen(buffer_aux)); // print the execution message to stdout
         
         // Fork, execute the command in the child process, and wait for it to finish in the parent process
         pid_t pid = fork();
@@ -79,7 +82,9 @@ int main(int argc, char *argv[]) {
             return -1;
         } else { 
             waitpid(pid, NULL, 0);
-            printf("[runner] command %d finished\n", command);
+            sprintf(buffer_aux, "[runner] command %d finished\n", command);
+            write(1, buffer_aux, strlen(buffer_aux)); // print the finished message to stdout
+
 
             // Notify the controller that the command has finished
             Message done;
@@ -134,7 +139,7 @@ int main(int argc, char *argv[]) {
         int bytes_read;
         while((bytes_read = read(fd_status_response, buffer, sizeof(buffer) - 1)) >  0) {
             buffer[bytes_read] = '\0'; // null-terminate the string
-            printf("%s", buffer); // print the status response
+            write(1, buffer, strlen(buffer)); // print the status response
         }
         close(fd_status_response); // close the FIFO
         unlink(fifo_controller_to_runner); // remove the FIFO after use
@@ -161,11 +166,13 @@ int main(int argc, char *argv[]) {
         write(fd_shutdown_request, &shutdown_request, sizeof(Message)); // send the shutdown request
         close(fd_shutdown_request); // close the FIFO
 
-        printf("[runner] sent shutdown notification\n");
+        char buffer_aux[1024];
+        sprintf(buffer_aux, "[runner] sent shutdown notification\n");
+        write(1, buffer_aux, strlen(buffer_aux)); // print the shutdown notification message to stdout
         // Wait the shutdown confirmation from the controller
 
-
-        printf("[runner] waiting for controller to shutdown...\n");
+        sprintf(buffer_aux, "[runner] waiting for controller to shutdown...\n");
+        write(1, buffer_aux, strlen(buffer_aux)); // print the waiting message to stdout
         // Wait the shutdown confirmation from the controller
         int fd_confirmation = open(fifo_controller_to_runner, O_RDONLY);
         if (fd_confirmation < 0) {
@@ -179,7 +186,8 @@ int main(int argc, char *argv[]) {
         unlink(fifo_controller_to_runner); // remove the FIFO after use
         // Shutdown confirmed
 
-        printf("[runner] controller exited.\n");
+        sprintf(buffer_aux, "[runner] controller exited.\n");
+        write(1, buffer_aux, strlen(buffer_aux)); // print the controller exit message to stdout
 
     } else {
         printf("ERROR: invalid arguments!\n");
