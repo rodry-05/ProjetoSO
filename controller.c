@@ -10,8 +10,6 @@ int main(int argc, char *argv[]) {
     int parallel = atoi(argv[1]);
     char *policy = argv[2];
     
-    struct timeval start_time, end_time;
-
 
     int number_of_running_commands = 0; // number of currently running commands
     int number_of_scheduled_commands = 0; // number of scheduled commands
@@ -43,7 +41,7 @@ int main(int argc, char *argv[]) {
                 if (shutdown_requested) {
                     continue; 
                 } else {
-                    gettimeofday(&start_time, NULL);
+                    gettimeofday(&request.start_time, NULL);
                     scheduled_commands[number_of_scheduled_commands++] = request; // add the command to the scheduled commands list
                 }
             } else if (request.type == 2) { // check status
@@ -81,6 +79,7 @@ int main(int argc, char *argv[]) {
                 }
 
             } else if (request.type == 4) { // command finished
+                struct timeval end_time;
                 gettimeofday(&end_time, NULL);
                 for (int i = 0; i < number_of_running_commands; i++) {
                     if (running_commands[i].pid == request.pid) {
@@ -89,7 +88,7 @@ int main(int argc, char *argv[]) {
                         }
                         number_of_running_commands--;
 
-                        double duration = (end_time.tv_sec - start_time.tv_sec) + (end_time.tv_usec - start_time.tv_usec) / 1000000.0;
+                        double duration = (end_time.tv_sec - running_commands[i].start_time.tv_sec) + (end_time.tv_usec - running_commands[i].start_time.tv_usec) / 1000000.0;
                         int log_fd = open("../tmp/logs.txt", O_WRONLY | O_CREAT | O_APPEND, 0666);
                         if (log_fd < 0) {
                             printf("ERROR: failed to open/create log.txt\n");

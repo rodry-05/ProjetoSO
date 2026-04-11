@@ -16,6 +16,7 @@ typedef struct {
     pid_t pid; // command_id
     int n_args; // number of arguments in the command + command
     char command[32][256]; // buffer to store the command and its arguments
+    struct timeval start_time; 
 } Message;
 
 #endif
