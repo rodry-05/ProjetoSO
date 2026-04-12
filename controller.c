@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
                 write(fd, buffer, offset);
                 close(fd);
 
-            } else if (request.type == 3) { // shoutdown
+            } else if (request.type == 3) { // shutdown
                 if (!shutdown_requested) {
                     shutdown_requested = 1;
                     shutdown_pid = request.pid;
