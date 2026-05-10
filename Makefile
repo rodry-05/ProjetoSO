@@ -2,12 +2,15 @@ CC = gcc
 CFLAGS = -Wall -g -I.
 LDFLAGS = 
 
+# Declara que os targets não corresponde a ficheiros reais
+.PHONY: all controller runner folders clean
+
 # Lista de executáveis final
-all: folders mycontroller myrunner
+all: folders controller runner
 
-mycontroller: bin/controller
+controller: bin/controller
 
-myrunner: bin/runner
+runner: bin/runner
 
 # Criação das pastas necessárias
 folders:
@@ -25,7 +28,7 @@ bin/runner: obj/runner.o
 obj/%.o: %.c 
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# usado para limpar os fifos criados durante a execução do programa
+# Usado para limpar os fifos criados durante a execução do programa
 clean:             
 	rm -rf obj/* tmp/* bin/*
 	rm -rf obj tmp bin
