@@ -1,5 +1,18 @@
 #include "utils.h"
 
+#define MAX_RUNNERS 10
+
+
+int pick_next(Message *scheduled, int n_scheduled, int *user_executions) {
+    int best = 0;
+    for (int i = 1; i < n_scheduled; i++) {
+        if (user_executions[scheduled[i].user_id] < user_executions[scheduled[best].user_id]) {
+            best = i;
+        }
+    }
+    return best;
+}
+
 int main(int argc, char *argv[]) {
     if (argc < 3) {
         printf("ERROR: insufficient arguments ...\n");
